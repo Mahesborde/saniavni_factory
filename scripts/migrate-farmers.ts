@@ -119,6 +119,16 @@ async function main() {
 
 try {
   await main();
+} catch (error) {
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : "";
+  if (code === "28P01") {
+    console.error("Source PostgreSQL rejected the login. Verify PGHOST, PGUSER, and PGPASSWORD; these must belong to the source database, not the Supabase destination.");
+  } else {
+    console.error(error);
+  }
+  process.exitCode = 1;
 } finally {
   await source.end();
   await destination?.end();

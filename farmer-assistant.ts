@@ -12,10 +12,30 @@ type FarmerRecord = {
 
 const selectedColumns = "id,name,village,sugarcane_tons,amount_paid,payment_pending";
 let pool: pg.Pool | undefined;
+let supabaseDatabasePool: pg.Pool | undefined;
 
 async function getFarmerRecords(): Promise<FarmerRecord[]> {
+  const databaseUrl = process.env.DATABASE_URL;
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
   const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (databaseUrl) {
+    if (!supabaseDatabasePool) {
+      supabaseDatabasePool = new pg.Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: process.env.VERCEL ? 1 : 5,
+        idleTimeoutMillis: 10_000,
+        connectionTimeoutMillis: 8_000
+      });
+    }
+    const result = await supabaseDatabasePool.query<FarmerRecord>(`
+      SELECT id, name, village, sugarcane_tons, amount_paid, payment_pending
+      FROM public.farmers
+      ORDER BY sugarcane_tons DESC NULLS LAST
+    `);
+    return result.rows;
+  }
 
   if (supabaseUrl && supabaseKey) {
     const url = new URL(`${supabaseUrl}/rest/v1/farmers`);
@@ -41,7 +61,9 @@ async function getFarmerRecords(): Promise<FarmerRecord[]> {
   if (!pool) {
     const sslDisabled = process.env.PGSSLMODE?.toLowerCase() === "disable";
     const pgHost = process.env.PGHOST || "";
-    const sslRequired = process.env.PGSSLMODE?.toLowerCase() === "require" || pgHost.endsWith(".supabase.co");
+    const sslRequired = process.env.PGSSLMODE?.toLowerCase() === "require"
+      || pgHost.endsWith(".supabase.co")
+      || pgHost.endsWith(".pooler.supabase.com");
     pool = new pg.Pool({
       ssl: sslDisabled ? false : sslRequired ? { rejectUnauthorized: false } : undefined
     });
