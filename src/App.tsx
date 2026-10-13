@@ -7,12 +7,6 @@ type Message = {
   isError?: boolean;
 };
 
-const suggestions = [
-  { icon: "↗", title: "Top supplier", question: "Which farmer supplied the most sugarcane?" },
-  { icon: "₹", title: "Pending payments", question: "What is the total pending payment?" },
-  { icon: "⌁", title: "Supply overview", question: "How much sugarcane has been supplied in total?" }
-];
-
 function SparkleIcon({ small = false }: { small?: boolean }) {
   return (
     <svg
@@ -146,22 +140,8 @@ function App() {
             {messages.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-sparkle"><SparkleIcon /></div>
-                <h2>What would you like to know?</h2>
-                <p>Pick a question to get started, or ask in your own words.</p>
-                <div className="suggestions">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      className="suggestion"
-                      key={suggestion.title}
-                      onClick={() => void askQuestion(suggestion.question)}
-                      type="button"
-                    >
-                      <span className="suggestion-icon">{suggestion.icon}</span>
-                      <span><strong>{suggestion.title}</strong><small>{suggestion.question}</small></span>
-                      <span className="suggestion-arrow">↗</span>
-                    </button>
-                  ))}
-                </div>
+                <h2>Ask your own question</h2>
+                <p>Type a question below. The assistant will look up the farmer records and answer.</p>
               </div>
             ) : (
               <div className="conversation" aria-live="polite">
